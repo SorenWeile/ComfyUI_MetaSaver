@@ -6,6 +6,20 @@ from PIL.PngImagePlugin import PngInfo
 import folder_paths
 
 
+class AnyType(str):
+    """A special class that is always equal in comparisons. This allows the wildcard to accept any type."""
+
+    def __eq__(self, _) -> bool:
+        return True
+
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+
+# Create a wildcard instance for use in INPUT_TYPES
+ANY = AnyType("*")
+
+
 class MetaSaverNode:
     """
     A ComfyUI custom node that saves images with custom metadata fields.
@@ -25,7 +39,7 @@ class MetaSaverNode:
         optional_inputs = {}
         for i in range(10):
             optional_inputs[f"meta_name_{i}"] = ("STRING", {"default": "", "multiline": False})
-            optional_inputs[f"meta_value_{i}"] = ("*", {"default": ""})
+            optional_inputs[f"meta_value_{i}"] = (ANY,)
 
         return {
             "required": {
@@ -146,7 +160,7 @@ class MetaSaverDynamicNode:
         optional_inputs = {}
         for i in range(20):
             optional_inputs[f"meta_name_{i}"] = ("STRING", {"default": "", "multiline": False})
-            optional_inputs[f"meta_value_{i}"] = ("*", {"default": ""})
+            optional_inputs[f"meta_value_{i}"] = (ANY,)
 
         return {
             "required": {
