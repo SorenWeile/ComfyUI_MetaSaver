@@ -9,7 +9,7 @@ import folder_paths
 class MetaSaverNode:
     """
     A ComfyUI custom node that saves images with custom metadata fields.
-    Allows dynamic specification of metadata fields with custom names.
+    Uses a fixed number of optional metadata fields (all optional).
     """
 
     def __init__(self):
@@ -20,15 +20,19 @@ class MetaSaverNode:
 
     @classmethod
     def INPUT_TYPES(cls):
+        # Create optional inputs for metadata fields (up to 10 fields)
+        # Users can use as many as they need
+        optional_inputs = {}
+        for i in range(10):
+            optional_inputs[f"meta_name_{i}"] = ("STRING", {"default": "", "multiline": False})
+            optional_inputs[f"meta_value_{i}"] = ("*", {"default": ""})
+
         return {
             "required": {
                 "images": ("IMAGE",),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                "num_metadata_fields": ("INT", {"default": 3, "min": 0, "max": 20, "step": 1}),
             },
-            "optional": {
-                # Dynamic metadata fields will be added via RETURN_TYPES
-            },
+            "optional": optional_inputs,
             "hidden": {
                 "prompt": "PROMPT",
                 "extra_pnginfo": "EXTRA_PNGINFO"
@@ -40,7 +44,7 @@ class MetaSaverNode:
     OUTPUT_NODE = True
     CATEGORY = "image"
 
-    def save_images(self, images, filename_prefix="ComfyUI", num_metadata_fields=3,
+    def save_images(self, images, filename_prefix="ComfyUI",
                     prompt=None, extra_pnginfo=None, **kwargs):
         """
         Save images with custom metadata embedded in PNG files.
@@ -48,10 +52,9 @@ class MetaSaverNode:
         Args:
             images: Tensor of images to save
             filename_prefix: Prefix for saved filenames
-            num_metadata_fields: Number of custom metadata fields (configured in UI)
             prompt: ComfyUI workflow prompt (auto-injected)
             extra_pnginfo: Extra PNG info (auto-injected)
-            **kwargs: Dynamic metadata fields (meta_field_0, meta_field_1, etc.)
+            **kwargs: Dynamic metadata fields (meta_name_0, meta_value_0, etc.)
         """
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = \
@@ -60,9 +63,9 @@ class MetaSaverNode:
 
         results = list()
 
-        # Collect custom metadata from kwargs
+        # Collect custom metadata from kwargs (check up to 10 fields)
         custom_metadata = {}
-        for i in range(num_metadata_fields):
+        for i in range(10):
             field_name_key = f"meta_name_{i}"
             field_value_key = f"meta_value_{i}"
 
@@ -127,8 +130,8 @@ class MetaSaverNode:
 
 class MetaSaverDynamicNode:
     """
-    Advanced version with truly dynamic inputs based on num_metadata_fields.
-    This version regenerates inputs when num_metadata_fields changes.
+    Advanced version with even more metadata fields (up to 20).
+    All fields are optional - just fill in the ones you need.
     """
 
     def __init__(self):
@@ -139,33 +142,30 @@ class MetaSaverDynamicNode:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # Note: This is the base configuration. Dynamic inputs are handled by ComfyUI
-        # when it detects the IS_CHANGED method
+        # Create optional inputs for metadata fields (up to 20 fields)
+        optional_inputs = {}
+        for i in range(20):
+            optional_inputs[f"meta_name_{i}"] = ("STRING", {"default": "", "multiline": False})
+            optional_inputs[f"meta_value_{i}"] = ("*", {"default": ""})
+
         return {
             "required": {
                 "images": ("IMAGE",),
                 "filename_prefix": ("STRING", {"default": "ComfyUI"}),
-                "num_metadata_fields": ("INT", {"default": 3, "min": 0, "max": 20, "step": 1}),
             },
+            "optional": optional_inputs,
             "hidden": {
                 "prompt": "PROMPT",
                 "extra_pnginfo": "EXTRA_PNGINFO"
             },
         }
 
-    @classmethod
-    def VALIDATE_INPUTS(cls, num_metadata_fields, **kwargs):
-        """Validate that metadata field names are provided."""
-        if num_metadata_fields < 0 or num_metadata_fields > 20:
-            return "num_metadata_fields must be between 0 and 20"
-        return True
-
     RETURN_TYPES = ()
     FUNCTION = "save_images"
     OUTPUT_NODE = True
     CATEGORY = "image"
 
-    def save_images(self, images, filename_prefix="ComfyUI", num_metadata_fields=3,
+    def save_images(self, images, filename_prefix="ComfyUI",
                     prompt=None, extra_pnginfo=None, **kwargs):
         """
         Save images with custom metadata embedded in PNG files.
@@ -173,7 +173,6 @@ class MetaSaverDynamicNode:
         Args:
             images: Tensor of images to save
             filename_prefix: Prefix for saved filenames
-            num_metadata_fields: Number of custom metadata fields (configured in UI)
             prompt: ComfyUI workflow prompt (auto-injected)
             extra_pnginfo: Extra PNG info (auto-injected)
             **kwargs: Dynamic metadata fields (meta_name_0, meta_value_0, etc.)
@@ -185,9 +184,9 @@ class MetaSaverDynamicNode:
 
         results = list()
 
-        # Collect custom metadata from kwargs
+        # Collect custom metadata from kwargs (check up to 20 fields)
         custom_metadata = {}
-        for i in range(num_metadata_fields):
+        for i in range(20):
             field_name_key = f"meta_name_{i}"
             field_value_key = f"meta_value_{i}"
 

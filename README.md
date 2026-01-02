@@ -4,12 +4,14 @@ A powerful ComfyUI custom node for saving images with flexible custom metadata f
 
 ## Features
 
-- **Dynamic Metadata Fields**: Specify how many metadata fields you want (0-20)
+- **Up to 10 Metadata Fields**: Standard version with 10 optional metadata slots
+- **Up to 20 Metadata Fields**: Dynamic version with 20 optional metadata slots
 - **Custom Field Names**: Give each metadata field a custom name
-- **Flexible Input Types**: Supports strings, integers (seeds), floats (CFG), and more
+- **Flexible Input Types**: Supports ANY type - strings, integers (seeds), floats (CFG), and more
 - **PNG Metadata Embedding**: All custom data is saved in the PNG file
 - **Workflow Preservation**: Maintains standard ComfyUI workflow metadata
 - **Multiple Formats**: Metadata saved both as structured JSON and individual fields
+- **All Optional**: Only fill in the fields you need - empty fields are ignored
 
 ## Why MetaSaver?
 
@@ -47,16 +49,18 @@ Perfect for tracking generation parameters, comparing outputs, or sharing images
 ### Basic Example
 
 1. Add the **"Save Image with Custom Metadata"** node to your workflow
-2. Set `num_metadata_fields` to how many custom fields you want (e.g., 3)
-3. The node will show input fields for each metadata pair:
+2. You'll see pairs of inputs for metadata (10 pairs in standard, 20 in dynamic version):
    - `meta_name_0`: Name of first field (e.g., "seed")
    - `meta_value_0`: Value to save (e.g., connect from KSampler seed output)
    - `meta_name_1`: Name of second field (e.g., "positive_prompt")
    - `meta_value_1`: Value to save
-   - And so on...
+   - ... and so on
 
+3. Fill in only the metadata fields you want to use (empty ones are ignored)
 4. Connect your image output to the `images` input
 5. Run your workflow!
+
+**Note**: All metadata fields are optional - you can use as many or as few as you need!
 
 ### Example: Saving Seed and Prompts
 
@@ -79,13 +83,13 @@ Workflow Setup:
                     ┌─────────────────────┐
                     │    MetaSaver Node   │
                     │                     │
-                    │ num_fields: 3       │
                     │ meta_name_0: seed   │
                     │ meta_value_0: ───   │ (from KSampler)
                     │ meta_name_1: prompt_pos │
                     │ meta_value_1: ───   │ (from positive)
                     │ meta_name_2: prompt_neg │
                     │ meta_value_2: ───   │ (from negative)
+                    │ (other fields empty)│
                     └─────────────────────┘
 ```
 
@@ -120,10 +124,12 @@ You can read this metadata with:
 ## Node Variants
 
 ### MetaSaver (Standard)
-Basic version with fixed metadata fields based on `num_metadata_fields` parameter.
+Standard version with **10 optional metadata field pairs** (meta_name_0 through meta_name_9).
+Perfect for most use cases.
 
 ### MetaSaverDynamic (Advanced)
-Advanced version with enhanced dynamic input handling. Same functionality but with additional validation.
+Advanced version with **20 optional metadata field pairs** (meta_name_0 through meta_name_19).
+For power users who need to track many parameters at once.
 
 ## Common Use Cases
 
