@@ -62,37 +62,6 @@ Perfect for tracking generation parameters, comparing outputs, or sharing images
 
 **Note**: All metadata fields are optional - you can use as many or as few as you need!
 
-### Example: Saving Seed and Prompts
-
-```
-Workflow Setup:
-┌─────────────┐
-│  KSampler   │ ─(seed)───────────┐
-└─────────────┘                   │
-                                  │
-┌─────────────┐                   │
-│ Text Prompt │ ─(text)───────┐   │
-│  (Positive) │               │   │
-└─────────────┘               │   │
-                              │   │
-┌─────────────┐               │   │
-│ Text Prompt │ ─(text)───┐   │   │
-│  (Negative) │           │   │   │
-└─────────────┘           │   │   │
-                          ▼   ▼   ▼
-                    ┌─────────────────────┐
-                    │    MetaSaver Node   │
-                    │                     │
-                    │ meta_name_0: seed   │
-                    │ meta_value_0: ───   │ (from KSampler)
-                    │ meta_name_1: prompt_pos │
-                    │ meta_value_1: ───   │ (from positive)
-                    │ meta_name_2: prompt_neg │
-                    │ meta_value_2: ───   │ (from negative)
-                    │ (other fields empty)│
-                    └─────────────────────┘
-```
-
 ### Reading Metadata
 
 The saved PNG files contain metadata in multiple formats:
