@@ -39,7 +39,7 @@ Perfect for tracking generation parameters, comparing outputs, or sharing images
 
 2. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ComfyUI_MetaSaver.git
+   git clone https://github.com/SorenWeile/ComfyUI_MetaSaver.git
    ```
 
 3. Restart ComfyUI
