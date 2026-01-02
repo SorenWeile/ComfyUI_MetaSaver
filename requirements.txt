@@ -1,0 +1,8 @@
+# Core dependencies for ComfyUI MetaSaver
+# Note: Most dependencies are provided by ComfyUI itself
+
+# Image processing (usually already available in ComfyUI)
+Pillow>=9.0.0
+
+# NumPy (usually already available in ComfyUI)
+numpy>=1.20.0
