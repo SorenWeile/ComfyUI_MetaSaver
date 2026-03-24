@@ -29,7 +29,7 @@ Documentation = "https://github.com/SorenWeile/ComfyUI_MetaSaver/wiki"
 "Bug Tracker" = "https://github.com/SorenWeile/ComfyUI_MetaSaver/issues"
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "revstamper"
 DisplayName = "ComfyUI_MetaSaver"
 Icon = ""
 includes = [] 
