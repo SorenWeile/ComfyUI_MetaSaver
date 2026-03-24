@@ -1,6 +1,6 @@
 [project]
 name = "metasaver"
-description = ""
+description = "A powerful ComfyUI custom node for saving images with flexible custom metadata fields embedded in PNG files."
 version = "1.0.0"
 license = {file = "LICENSE"} 
 # classifiers = [
