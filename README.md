@@ -130,16 +130,6 @@ For power users who need to track many parameters at once.
 - **ComfyUI Integration**: Follows standard node conventions
 - **Workflow Compatibility**: Preserves standard ComfyUI workflow data
 
-## Comparison with Other Nodes
-
-| Feature | MetaSaver | SaveImageWithMetaData | Crystools | comfy-image-saver |
-|---------|-----------|----------------------|-----------|-------------------|
-| Custom field names | ✅ | ❌ | ⚠️ (JSON) | ❌ |
-| Dynamic field count | ✅ | ❌ | ❌ | ❌ |
-| Visual UI for fields | ✅ | ⚠️ | ❌ | ❌ |
-| Any input type | ✅ | ⚠️ | ✅ | ⚠️ |
-| Structured JSON output | ✅ | ⚠️ | ✅ | ✅ |
-| Individual field access | ✅ | ❌ | ❌ | ⚠️ |
 
 ## Troubleshooting
 
