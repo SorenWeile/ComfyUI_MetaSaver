@@ -20,7 +20,7 @@ license = {file = "LICENSE"}
 #     "Environment :: GPU :: Apple Metal",    # Apple Metal support
 # ]
 
-dependencies = ["Pillow>=9.0.0", "numpy>=1.20.0", "av>=10.0.0"]
+dependencies = ["Pillow>=9.0.0", "numpy>=1.20.0"]
 
 [project.urls]
 Repository = "https://github.com/SorenWeile/ComfyUI_MetaSaver"

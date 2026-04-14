@@ -5,13 +5,6 @@ from PIL import Image, PngImagePlugin
 from PIL.PngImagePlugin import PngInfo
 import folder_paths
 
-try:
-    import av
-    import torch
-    from fractions import Fraction
-    HAS_AV = True
-except ImportError:
-    HAS_AV = False
 
 
 class AnyType(str):
@@ -275,9 +268,9 @@ class MetaSaverDynamicNode:
 
 class MetaVideoSaverNode:
     """
-    A ComfyUI custom node that saves video (from image frames) with custom metadata.
-    Supports MP4 (H.264) and WEBM (VP9) output formats.
-    Uses up to 10 optional custom metadata fields embedded in the video container.
+    A ComfyUI custom node that saves a VIDEO with custom metadata embedded in
+    the container tags. Accepts the VIDEO type produced by nodes like "Create Video"
+    and delegates encoding entirely to ComfyUI's built-in video pipeline.
     """
 
     def __init__(self):
@@ -294,10 +287,10 @@ class MetaVideoSaverNode:
 
         return {
             "required": {
-                "images": ("IMAGE",),
+                "video": ("VIDEO",),
                 "filename_prefix": ("STRING", {"default": "video/ComfyUI"}),
-                "fps": ("FLOAT", {"default": 24.0, "min": 0.01, "max": 1000.0, "step": 0.01}),
-                "format": (["mp4", "webm"],),
+                "format": (["auto", "mp4"],),
+                "codec": (["auto", "h264"],),
             },
             "optional": optional_inputs,
             "hidden": {
@@ -311,14 +304,11 @@ class MetaVideoSaverNode:
     OUTPUT_NODE = True
     CATEGORY = "image/video"
 
-    def save_video(self, images, filename_prefix="video/ComfyUI", fps=24.0, format="mp4",
+    def save_video(self, video, filename_prefix="video/ComfyUI", format="auto", codec="auto",
                    prompt=None, extra_pnginfo=None, **kwargs):
-        if not HAS_AV:
-            raise RuntimeError("PyAV (av) is not installed. Cannot save video.")
-
+        width, height = video.get_dimensions()
         full_output_folder, filename, counter, subfolder, filename_prefix = \
-            folder_paths.get_save_image_path(filename_prefix, self.output_dir,
-                                             images[0].shape[1], images[0].shape[0])
+            folder_paths.get_save_image_path(filename_prefix, self.output_dir, width, height)
 
         # Collect custom metadata
         custom_metadata = {}
@@ -330,47 +320,23 @@ class MetaVideoSaverNode:
                 if field_name and field_name.strip():
                     custom_metadata[field_name] = self._format_value(kwargs[val_key])
 
-        file = f"{filename}_{counter:05}_.{format}"
+        # Build metadata dict — save_to JSON-serialises all values automatically
+        metadata = {}
+        if extra_pnginfo is not None:
+            metadata.update(extra_pnginfo)
+        if prompt is not None:
+            metadata["prompt"] = prompt
+        if custom_metadata:
+            metadata["custom_metadata"] = custom_metadata
+            for key, value in custom_metadata.items():
+                metadata[key] = str(value)
+
+        ext = "mp4" if format in ("auto", "mp4") else format
+        file = f"{filename}_{counter:05}_.{ext}"
         output_path = os.path.join(full_output_folder, file)
 
-        open_options = {}
-        if format == "mp4":
-            open_options = {"movflags": "use_metadata_tags"}
-
-        container = av.open(output_path, mode="w", options=open_options)
-
-        # Embed ComfyUI workflow metadata
-        if prompt is not None:
-            container.metadata["prompt"] = json.dumps(prompt)
-        if extra_pnginfo is not None:
-            for key, value in extra_pnginfo.items():
-                container.metadata[key] = json.dumps(value)
-
-        # Embed custom metadata
-        if custom_metadata:
-            container.metadata["custom_metadata"] = json.dumps(custom_metadata)
-            for key, value in custom_metadata.items():
-                container.metadata[key] = str(value)
-
-        codec_name = "libx264" if format == "mp4" else "libvpx-vp9"
-        pix_fmt = "yuv420p"
-        stream = container.add_stream(codec_name, rate=Fraction(round(fps * 1000), 1000))
-        stream.width = images.shape[-2]
-        stream.height = images.shape[-3]
-        stream.pix_fmt = pix_fmt
-        if format == "webm":
-            stream.bit_rate = 0
-            stream.options = {"crf": "32"}
-
-        for frame_tensor in images:
-            frame_np = torch.clamp(frame_tensor[..., :3] * 255, 0, 255).to(
-                device=torch.device("cpu"), dtype=torch.uint8
-            ).numpy()
-            frame = av.VideoFrame.from_ndarray(frame_np, format="rgb24")
-            for packet in stream.encode(frame):
-                container.mux(packet)
-        container.mux(stream.encode())
-        container.close()
+        video.save_to(output_path, format=format, codec=codec,
+                      metadata=metadata if metadata else None)
 
         results = [{"filename": file, "subfolder": subfolder, "type": self.type}]
         return {"ui": {"videos": results}}
@@ -405,10 +371,10 @@ class MetaVideoSaverDynamicNode:
 
         return {
             "required": {
-                "images": ("IMAGE",),
+                "video": ("VIDEO",),
                 "filename_prefix": ("STRING", {"default": "video/ComfyUI"}),
-                "fps": ("FLOAT", {"default": 24.0, "min": 0.01, "max": 1000.0, "step": 0.01}),
-                "format": (["mp4", "webm"],),
+                "format": (["auto", "mp4"],),
+                "codec": (["auto", "h264"],),
             },
             "optional": optional_inputs,
             "hidden": {
@@ -422,14 +388,11 @@ class MetaVideoSaverDynamicNode:
     OUTPUT_NODE = True
     CATEGORY = "image/video"
 
-    def save_video(self, images, filename_prefix="video/ComfyUI", fps=24.0, format="mp4",
+    def save_video(self, video, filename_prefix="video/ComfyUI", format="auto", codec="auto",
                    prompt=None, extra_pnginfo=None, **kwargs):
-        if not HAS_AV:
-            raise RuntimeError("PyAV (av) is not installed. Cannot save video.")
-
+        width, height = video.get_dimensions()
         full_output_folder, filename, counter, subfolder, filename_prefix = \
-            folder_paths.get_save_image_path(filename_prefix, self.output_dir,
-                                             images[0].shape[1], images[0].shape[0])
+            folder_paths.get_save_image_path(filename_prefix, self.output_dir, width, height)
 
         custom_metadata = {}
         for i in range(20):
@@ -440,45 +403,22 @@ class MetaVideoSaverDynamicNode:
                 if field_name and field_name.strip():
                     custom_metadata[field_name] = self._format_value(kwargs[val_key])
 
-        file = f"{filename}_{counter:05}_.{format}"
+        metadata = {}
+        if extra_pnginfo is not None:
+            metadata.update(extra_pnginfo)
+        if prompt is not None:
+            metadata["prompt"] = prompt
+        if custom_metadata:
+            metadata["custom_metadata"] = custom_metadata
+            for key, value in custom_metadata.items():
+                metadata[f"meta_{key}"] = str(value)
+
+        ext = "mp4" if format in ("auto", "mp4") else format
+        file = f"{filename}_{counter:05}_.{ext}"
         output_path = os.path.join(full_output_folder, file)
 
-        open_options = {}
-        if format == "mp4":
-            open_options = {"movflags": "use_metadata_tags"}
-
-        container = av.open(output_path, mode="w", options=open_options)
-
-        if prompt is not None:
-            container.metadata["prompt"] = json.dumps(prompt)
-        if extra_pnginfo is not None:
-            for key, value in extra_pnginfo.items():
-                container.metadata[key] = json.dumps(value)
-
-        if custom_metadata:
-            container.metadata["custom_metadata"] = json.dumps(custom_metadata, indent=2)
-            for key, value in custom_metadata.items():
-                container.metadata[f"meta_{key}"] = str(value)
-
-        codec_name = "libx264" if format == "mp4" else "libvpx-vp9"
-        pix_fmt = "yuv420p"
-        stream = container.add_stream(codec_name, rate=Fraction(round(fps * 1000), 1000))
-        stream.width = images.shape[-2]
-        stream.height = images.shape[-3]
-        stream.pix_fmt = pix_fmt
-        if format == "webm":
-            stream.bit_rate = 0
-            stream.options = {"crf": "32"}
-
-        for frame_tensor in images:
-            frame_np = torch.clamp(frame_tensor[..., :3] * 255, 0, 255).to(
-                device=torch.device("cpu"), dtype=torch.uint8
-            ).numpy()
-            frame = av.VideoFrame.from_ndarray(frame_np, format="rgb24")
-            for packet in stream.encode(frame):
-                container.mux(packet)
-        container.mux(stream.encode())
-        container.close()
+        video.save_to(output_path, format=format, codec=codec,
+                      metadata=metadata if metadata else None)
 
         results = [{"filename": file, "subfolder": subfolder, "type": self.type}]
         return {"ui": {"videos": results}}
