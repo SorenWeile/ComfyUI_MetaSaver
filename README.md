@@ -1,6 +1,6 @@
 # ComfyUI MetaSaver
 
-A powerful ComfyUI custom node for saving images with flexible custom metadata fields embedded in PNG files.
+A powerful ComfyUI custom node for saving images **and videos** with flexible custom metadata fields embedded directly in the file.
 
 ## Features
 
@@ -8,21 +8,23 @@ A powerful ComfyUI custom node for saving images with flexible custom metadata f
 - **Up to 20 Metadata Fields**: Dynamic version with 20 optional metadata slots
 - **Custom Field Names**: Give each metadata field a custom name
 - **Flexible Input Types**: Supports ANY type - strings, integers (seeds), floats (CFG), and more
-- **PNG Metadata Embedding**: All custom data is saved in the PNG file
+- **PNG & Video Metadata Embedding**: Custom data saved in PNG files or video container tags
 - **Workflow Preservation**: Maintains standard ComfyUI workflow metadata
 - **Multiple Formats**: Metadata saved both as structured JSON and individual fields
 - **All Optional**: Only fill in the fields you need - empty fields are ignored
+- **Video Output**: Save MP4 (H.264) or WEBM (VP9) video from image frame batches
 
 ## Why MetaSaver?
 
-Unlike standard image save nodes, MetaSaver lets you:
+Unlike standard save nodes, MetaSaver lets you:
 - Save **seeds** from KSampler nodes
 - Store **positive and negative prompts**
 - Record **model names, LoRA weights, CFG values**
 - Add **any custom text or numbers** you want to track
 - **Name your fields** exactly how you want them
+- **Embed metadata in videos** as container-level tags
 
-Perfect for tracking generation parameters, comparing outputs, or sharing images with full context!
+Perfect for tracking generation parameters, comparing outputs, or sharing images and videos with full context!
 
 ## Installation
 
@@ -46,7 +48,7 @@ Perfect for tracking generation parameters, comparing outputs, or sharing images
 
 ## Usage
 
-### Basic Example
+### Saving Images
 
 1. Add the **"Save Image with Custom Metadata"** node to your workflow
 2. You'll see pairs of inputs for metadata (10 pairs in standard, 20 in dynamic version):
@@ -60,26 +62,22 @@ Perfect for tracking generation parameters, comparing outputs, or sharing images
 4. Connect your image output to the `images` input
 5. Run your workflow!
 
+### Saving Videos
+
+1. Add the **"Save Video with Custom Metadata"** node to your workflow
+2. Connect an `IMAGE` batch (your video frames) to the `images` input
+3. Set `fps`, choose `format` (mp4 or webm), and fill in any metadata fields
+4. Run your workflow — the video is saved to your ComfyUI output folder
+
+A typical video workflow: **KSampler → VAE Decode → Save Video with Custom Metadata**
+
+Or for multi-frame video: connect the image batch output from a video model directly.
+
 **Note**: All metadata fields are optional - you can use as many or as few as you need!
 
 ### Reading Metadata
 
-The saved PNG files contain metadata in multiple formats:
-
-1. **Structured JSON** (key: `custom_metadata`):
-   ```json
-   {
-     "seed": 12345,
-     "positive_prompt": "a beautiful landscape",
-     "negative_prompt": "blurry, low quality",
-     "cfg_scale": 7.5,
-     "model_name": "sd_xl_base_1.0"
-   }
-   ```
-
-2. **Individual fields** (keys: `meta_seed`, `meta_positive_prompt`, etc.)
-
-You can read this metadata with:
+**From PNG images:**
 - ComfyUI: Drag the image back into ComfyUI to see all metadata
 - Python:
   ```python
@@ -90,15 +88,43 @@ You can read this metadata with:
   ```
 - ExifTool: `exiftool your_image.png`
 
+**From MP4/WEBM videos:**
+- Command line: `ffprobe -v quiet -print_format json -show_format your_video.mp4`
+- Python:
+  ```python
+  import av, json
+  with av.open("your_video.mp4") as container:
+      custom = json.loads(container.metadata.get("custom_metadata", "{}"))
+      print(custom)
+  ```
+- ExifTool: `exiftool your_video.mp4`
+
+The metadata JSON structure is the same for both images and videos:
+```json
+{
+  "seed": 12345,
+  "positive_prompt": "a beautiful landscape",
+  "cfg_scale": 7.5,
+  "model_name": "sd_xl_base_1.0"
+}
+```
+
 ## Node Variants
 
 ### MetaSaver (Standard)
-Standard version with **10 optional metadata field pairs** (meta_name_0 through meta_name_9).
+Saves a **PNG image** with **10 optional metadata field pairs** (meta_name_0 through meta_name_9).
 Perfect for most use cases.
 
 ### MetaSaverDynamic (Advanced)
-Advanced version with **20 optional metadata field pairs** (meta_name_0 through meta_name_19).
+Saves a **PNG image** with **20 optional metadata field pairs** (meta_name_0 through meta_name_19).
 For power users who need to track many parameters at once.
+
+### MetaVideoSaver (Standard)
+Saves a **video (MP4 or WEBM)** from an `IMAGE` batch with **10 optional metadata field pairs**.
+Metadata is embedded as container-level tags readable by ffprobe, ExifTool, or PyAV.
+
+### MetaVideoSaverDynamic (Advanced)
+Saves a **video (MP4 or WEBM)** from an `IMAGE` batch with **20 optional metadata field pairs**.
 
 ## Common Use Cases
 
