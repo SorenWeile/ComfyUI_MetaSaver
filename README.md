@@ -150,11 +150,12 @@ Saves a **video (MP4 or WEBM)** from an `IMAGE` batch with **20 optional metadat
 
 ## Technical Details
 
-- **File Format**: PNG with embedded metadata
-- **Metadata Storage**: Both structured JSON and individual text fields
-- **Image Processing**: Uses PIL/Pillow for reliable PNG handling
+- **Image Format**: PNG with embedded metadata (PIL/Pillow)
+- **Video Formats**: MP4 (H.264, yuv420p) or WEBM (VP9, yuv420p) via PyAV
+- **Metadata Storage**: Structured JSON + individual text fields (images); container-level tags (videos)
+- **MP4 Metadata**: Written using `movflags=use_metadata_tags` for full tag support
 - **ComfyUI Integration**: Follows standard node conventions
-- **Workflow Compatibility**: Preserves standard ComfyUI workflow data
+- **Workflow Compatibility**: Preserves standard ComfyUI workflow data (prompt + extra_pnginfo)
 
 
 ## Troubleshooting
@@ -167,12 +168,17 @@ Saves a **video (MP4 or WEBM)** from an `IMAGE` batch with **20 optional metadat
 ### Metadata not saving
 - Ensure field names are not empty
 - Check that values are connected to inputs
-- Verify PNG format is selected
+- For images: verify PNG format is selected
+- For videos: use `ffprobe -show_format_tags` to inspect saved file
 
 ### Can't read metadata
-- Use `exiftool` or Python PIL to verify metadata exists
-- Check the `custom_metadata` field for structured JSON
-- Individual fields are prefixed with `meta_`
+- Images: use `exiftool` or Python PIL — check the `custom_metadata` field for structured JSON
+- Videos: use `ffprobe -v quiet -print_format json -show_format your_video.mp4`
+- Individual fields are prefixed with `meta_` in the Dynamic variant
+
+### Video node not available
+- Ensure PyAV is installed: `pip install av`
+- PyAV is bundled with most ComfyUI distributions — check the console for import errors
 
 ## Contributing
 
